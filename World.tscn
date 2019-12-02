@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://addons/shader_procedural_textures/Worley_texture.tscn" type="PackedScene" id=1]
 [ext_resource path="res://MouseLookCamera.gd" type="Script" id=2]
 [ext_resource path="res://RaymarchingCloudsCamera.shader" type="Shader" id=3]
+[ext_resource path="res://ScreenTexture.gd" type="Script" id=4]
 
 [sub_resource type="ProceduralSky" id=1]
 
@@ -10,20 +11,22 @@
 background_mode = 2
 background_sky = SubResource( 1 )
 
-[sub_resource type="ViewportTexture" id=6]
+[sub_resource type="ViewportTexture" id=3]
 viewport_path = NodePath("CameraControl/Viewport")
 
-[sub_resource type="ViewportTexture" id=7]
+[sub_resource type="ViewportTexture" id=4]
 viewport_path = NodePath("Worley_texture")
 
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
+shader_param/worley_uv_scale = 0.01
 shader_param/depth = 128.0
-shader_param/num_steps = 64
+shader_param/num_steps = 256
 shader_param/step_length = 0.5
-shader_param/camera_view = SubResource( 6 )
-shader_param/worley = SubResource( 7 )
+shader_param/global_transform = null
+shader_param/camera_view = SubResource( 3 )
+shader_param/worley = SubResource( 4 )
 
 [node name="World" type="Spatial"]
 
@@ -52,3 +55,5 @@ material = SubResource( 5 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+script = ExtResource( 4 )
+camera_path = NodePath("../CameraControl/Viewport/Head/Camera")

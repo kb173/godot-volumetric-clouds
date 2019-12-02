@@ -3,17 +3,20 @@ shader_type canvas_item;
 uniform sampler2D camera_view;
 uniform sampler2D worley;
 
+uniform float worley_uv_scale = 1.0;
 uniform float depth = 128.0;
 
-uniform int num_steps = 64;
+uniform int num_steps = 256;
 uniform float step_length = 0.5;
 
+uniform mat4 global_transform;
+
 varying vec3 offset;
-varying vec3 start_position;
+varying vec3 vertex_pos;
 varying vec3 direction;
 
 vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
-	vec3 mod_uvw = mod(p_uvw + offset, 1.0);
+	vec3 mod_uvw = mod(p_uvw  * worley_uv_scale + offset, 1.0);
 	
 	float fd = mod_uvw.z * depth;
 	float fz = floor(fd);
@@ -40,14 +43,15 @@ float cloud_density(vec3 p_pos) {
 }
 
 void vertex() {
-	// Position
-	start_position = vec3(VERTEX.x, 0.0, VERTEX.y);
-	
-	// get our direction for our raymarch
-	direction = (inverse(PROJECTION_MATRIX) * vec4(normalize(start_position), 0.0)).xyz;
+	// Get some parameters
+	vertex_pos = (global_transform * vec4(VERTEX.x, -VERTEX.y, 0.0, 1.0)).xyz;
+
+	direction = global_transform[2].xyz;
 }
 
 void fragment() {
+	vec3 start_position = global_transform[3].xyz - vertex_pos * 0.08;
+	
 	// Draw the camera's view
     COLOR = texture(camera_view, SCREEN_UV);
 	
@@ -57,7 +61,7 @@ void fragment() {
 	float cloud_alpha = 0.0f;
 	
 	for (int i = 0; i < num_steps; i++) {
-		vec3 position = (start_position + distance_to_camera * vec3(0.0, 0.0, -1.0)) * 0.002;
+		vec3 position = (start_position + distance_to_camera * direction);
 		
 		float density = cloud_density(position);
 		
