@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/shader_procedural_textures/Worley_texture.tscn" type="PackedScene" id=1]
+[ext_resource path="res://RaymarchingCloudsCamera.shader" type="Shader" id=2]
 
 [sub_resource type="ProceduralSky" id=1]
 
@@ -8,23 +9,20 @@
 background_mode = 2
 background_sky = SubResource( 1 )
 
-[sub_resource type="Shader" id=3]
-code = "shader_type canvas_item;
-
-uniform sampler2D camera_view;
-
-void fragment() {
-	// Add the masked view and the true view depending on the factor
-    COLOR = texture(camera_view, SCREEN_UV);
-}"
-
 [sub_resource type="ViewportTexture" id=6]
 viewport_path = NodePath("Viewport")
 
+[sub_resource type="ViewportTexture" id=7]
+viewport_path = NodePath("Worley_texture")
+
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
-shader = SubResource( 3 )
+shader = ExtResource( 2 )
+shader_param/depth = 128.0
+shader_param/num_steps = 64
+shader_param/step_length = 0.5
 shader_param/camera_view = SubResource( 6 )
+shader_param/worley = SubResource( 7 )
 
 [node name="World" type="Spatial"]
 
@@ -32,13 +30,16 @@ shader_param/camera_view = SubResource( 6 )
 environment = SubResource( 2 )
 
 [node name="Worley_texture" parent="." instance=ExtResource( 1 )]
+texture_size = Vector3( 256, 256, 64 )
 
 [node name="Viewport" type="Viewport" parent="."]
 size = Vector2( 1024, 600 )
 render_target_update_mode = 3
 
 [node name="Camera" type="Camera" parent="Viewport"]
+transform = Transform( 0.906308, -0.178606, -0.383022, 0, 0.906308, -0.422618, 0.422618, 0.383022, 0.821394, -13, 12, 25 )
 current = true
+fov = 100.0
 
 [node name="ScreenTexture" type="ColorRect" parent="."]
 material = SubResource( 5 )
