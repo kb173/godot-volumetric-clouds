@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://addons/shader_procedural_textures/Worley_texture.tscn" type="PackedScene" id=1]
-[ext_resource path="res://RaymarchingCloudsCamera.shader" type="Shader" id=2]
+[ext_resource path="res://MouseLookCamera.gd" type="Script" id=2]
+[ext_resource path="res://RaymarchingCloudsCamera.shader" type="Shader" id=3]
 
 [sub_resource type="ProceduralSky" id=1]
 
@@ -10,14 +11,14 @@ background_mode = 2
 background_sky = SubResource( 1 )
 
 [sub_resource type="ViewportTexture" id=6]
-viewport_path = NodePath("Viewport")
+viewport_path = NodePath("CameraControl/Viewport")
 
 [sub_resource type="ViewportTexture" id=7]
 viewport_path = NodePath("Worley_texture")
 
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
-shader = ExtResource( 2 )
+shader = ExtResource( 3 )
 shader_param/depth = 128.0
 shader_param/num_steps = 64
 shader_param/step_length = 0.5
@@ -30,14 +31,19 @@ shader_param/worley = SubResource( 7 )
 environment = SubResource( 2 )
 
 [node name="Worley_texture" parent="." instance=ExtResource( 1 )]
+gui_disable_input = true
 texture_size = Vector3( 256, 256, 64 )
 
-[node name="Viewport" type="Viewport" parent="."]
+[node name="CameraControl" type="Spatial" parent="."]
+script = ExtResource( 2 )
+
+[node name="Viewport" type="Viewport" parent="CameraControl"]
 size = Vector2( 1024, 600 )
 render_target_update_mode = 3
 
-[node name="Camera" type="Camera" parent="Viewport"]
-transform = Transform( 0.906308, -0.178606, -0.383022, 0, 0.906308, -0.422618, 0.422618, 0.383022, 0.821394, -13, 12, 25 )
+[node name="Head" type="Spatial" parent="CameraControl/Viewport"]
+
+[node name="Camera" type="Camera" parent="CameraControl/Viewport/Head"]
 current = true
 fov = 100.0
 
@@ -45,3 +51,4 @@ fov = 100.0
 material = SubResource( 5 )
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
