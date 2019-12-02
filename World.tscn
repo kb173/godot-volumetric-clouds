@@ -11,8 +11,6 @@
 background_mode = 2
 background_sky = SubResource( 1 )
 
-[sub_resource type="PrismMesh" id=6]
-
 [sub_resource type="ViewportTexture" id=3]
 viewport_path = NodePath("CameraControl/Viewport")
 
@@ -22,9 +20,9 @@ viewport_path = NodePath("Worley_texture")
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
-shader_param/worley_uv_scale = 0.01
+shader_param/worley_uv_scale = 0.005
 shader_param/depth = 128.0
-shader_param/num_steps = 256
+shader_param/num_steps = 512
 shader_param/step_length = 0.5
 shader_param/global_transform = null
 shader_param/fov = 45.0
@@ -33,6 +31,8 @@ shader_param/front = Vector3( 1, 0, 0 )
 shader_param/up = Vector3( 0, 1, 0 )
 shader_param/camera_view = SubResource( 3 )
 shader_param/worley = SubResource( 4 )
+
+[sub_resource type="PrismMesh" id=6]
 
 [node name="World" type="Spatial"]
 
@@ -54,12 +54,6 @@ render_target_update_mode = 3
 
 [node name="Camera" type="Camera" parent="CameraControl/Viewport/Head"]
 current = true
-fov = 100.0
-
-[node name="MeshInstance" type="MeshInstance" parent="CameraControl/Viewport/Head"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0 )
-mesh = SubResource( 6 )
-material/0 = null
 
 [node name="ScreenTexture" type="ColorRect" parent="."]
 material = SubResource( 5 )
@@ -68,3 +62,8 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource( 4 )
 camera_path = NodePath("../CameraControl/Viewport/Head/Camera")
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0 )
+mesh = SubResource( 6 )
+material/0 = null

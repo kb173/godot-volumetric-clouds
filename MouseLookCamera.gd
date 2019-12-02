@@ -5,7 +5,7 @@ onready var _head = get_node("Viewport/Head")
 onready var _camera = _head.get_node("Camera")
 
 const MOUSE_SENSITIVITY = 0.07
-const MOUSE_MOVE_SPEED = 5.0
+const MOUSE_MOVE_SPEED = 0.1
 
 
 func _ready():

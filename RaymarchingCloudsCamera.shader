@@ -3,11 +3,11 @@ shader_type canvas_item;
 uniform sampler2D camera_view;
 uniform sampler2D worley;
 
-uniform float worley_uv_scale = 1.0;
+uniform float worley_uv_scale = 0.005;
 uniform float depth = 128.0;
 
-uniform int num_steps = 256;
-uniform float step_length = 0.5;
+uniform int num_steps = 512;
+uniform float step_length = 1.0;
 
 uniform mat4 global_transform;
 
@@ -47,13 +47,6 @@ float cloud_density(vec3 p_pos) {
 	return value;
 }
 
-void vertex() {
-	// Get some parameters
-	vertex_pos = (global_transform * vec4(VERTEX.x, -VERTEX.y, 0.0, 1.0)).xyz;
-
-	start_direction = global_transform[2].xyz;
-}
-
 // Adapted from https://github.com/PLUkraine/raymarching-godot
 vec3 get_ray_direction(vec2 resolution, vec2 uv)
 {
@@ -77,7 +70,7 @@ vec3 get_ray_direction(vec2 resolution, vec2 uv)
 }
 
 void fragment() {
-	vec3 start_position = global_transform[3].xyz;
+	vec3 start_position = global_transform[3].xyz / worley_uv_scale;
 	vec3 direction = get_ray_direction(1.0 / SCREEN_PIXEL_SIZE, UV);
 	
 	// Draw the camera's view
