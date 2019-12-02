@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://addons/shader_procedural_textures/Worley_texture.tscn" type="PackedScene" id=1]
 [ext_resource path="res://MouseLookCamera.gd" type="Script" id=2]
@@ -10,6 +10,8 @@
 [sub_resource type="Environment" id=2]
 background_mode = 2
 background_sky = SubResource( 1 )
+
+[sub_resource type="PrismMesh" id=6]
 
 [sub_resource type="ViewportTexture" id=3]
 viewport_path = NodePath("CameraControl/Viewport")
@@ -25,6 +27,10 @@ shader_param/depth = 128.0
 shader_param/num_steps = 256
 shader_param/step_length = 0.5
 shader_param/global_transform = null
+shader_param/fov = 45.0
+shader_param/cameraPos = Vector3( -5, 0, 0 )
+shader_param/front = Vector3( 1, 0, 0 )
+shader_param/up = Vector3( 0, 1, 0 )
 shader_param/camera_view = SubResource( 3 )
 shader_param/worley = SubResource( 4 )
 
@@ -49,6 +55,11 @@ render_target_update_mode = 3
 [node name="Camera" type="Camera" parent="CameraControl/Viewport/Head"]
 current = true
 fov = 100.0
+
+[node name="MeshInstance" type="MeshInstance" parent="CameraControl/Viewport/Head"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0 )
+mesh = SubResource( 6 )
+material/0 = null
 
 [node name="ScreenTexture" type="ColorRect" parent="."]
 material = SubResource( 5 )

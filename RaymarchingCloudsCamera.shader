@@ -13,7 +13,12 @@ uniform mat4 global_transform;
 
 varying vec3 offset;
 varying vec3 vertex_pos;
-varying vec3 direction;
+varying vec3 start_direction;
+
+uniform float fov = 45.0;
+uniform vec3 cameraPos = vec3(-5.0, 0.0, 0.0);
+uniform vec3 front = vec3(1.0, 0.0, 0.0);
+uniform vec3 up = vec3(0.0, 1.0, 0.0);
 
 vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
 	vec3 mod_uvw = mod(p_uvw  * worley_uv_scale + offset, 1.0);
@@ -46,11 +51,34 @@ void vertex() {
 	// Get some parameters
 	vertex_pos = (global_transform * vec4(VERTEX.x, -VERTEX.y, 0.0, 1.0)).xyz;
 
-	direction = global_transform[2].xyz;
+	start_direction = global_transform[2].xyz;
+}
+
+// Adapted from https://github.com/PLUkraine/raymarching-godot
+vec3 get_ray_direction(vec2 resolution, vec2 uv)
+{
+	float aspect = resolution.x / resolution.y;
+	float fov2 = radians(fov) / 2.0;
+	
+	// convert coordinates from [0, 1] to [-1, 1]
+	// and invert y axis to flow from bottom to top
+	vec2 screenCoord = (uv - 0.5) * 2.0;
+	screenCoord.x *= aspect;
+	screenCoord.y = -screenCoord.y;
+	
+	vec2 offsets = screenCoord * tan(fov2);
+	
+	vec3 rayFront = -normalize(global_transform[2].xyz);
+	vec3 rayRight = normalize(cross(rayFront, normalize(global_transform[1].xyz)));
+	vec3 rayUp = cross(rayRight, rayFront);
+	vec3 rayDir = rayFront + rayRight * offsets.x + rayUp * offsets.y;
+	
+	return normalize(rayDir);
 }
 
 void fragment() {
-	vec3 start_position = global_transform[3].xyz - vertex_pos * 0.08;
+	vec3 start_position = global_transform[3].xyz;
+	vec3 direction = get_ray_direction(1.0 / SCREEN_PIXEL_SIZE, UV);
 	
 	// Draw the camera's view
     COLOR = texture(camera_view, SCREEN_UV);
