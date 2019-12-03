@@ -3,20 +3,21 @@ render_mode unshaded;
 
 uniform sampler2D worley;
 
-uniform float worley_uv_scale = 0.01;
+uniform float worley_uv_scale = 0.001;
 uniform float depth = 128.0;
 
-uniform int num_steps = 1024;
+uniform int num_steps = 512;
 
 varying vec3 offset;
 
 uniform float cloud_begin = 100.0;
-uniform float cloud_end = 150.0;
+uniform float cloud_end = 200.0;
 
-uniform float earth_radius = 200.0f;
+uniform float earth_radius = 900.0f;
 
 vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
-	vec3 mod_uvw = mod(p_uvw  * worley_uv_scale + offset, 1.0);
+	p_uvw *= worley_uv_scale;
+	vec3 mod_uvw = mod(p_uvw + offset, 1.0);
 	
 	float fd = mod_uvw.z * depth;
 	float fz = floor(fd);
@@ -46,28 +47,35 @@ float cloud_density(vec3 p_pos) {
 // Returns the 3-dimensional point of intersection and the distance from the ray origin to there in the 4th dimension
 // Returns a 0 vector when no hit occured
 vec4 raySphereIntersect(vec3 ray_origin, vec3 ray_direction, vec3 sphere_origin, float sphere_radius) {
-	vec3 sphere_to_ray = ray_origin - sphere_origin;
+	/*float a = dot(ray_direction, ray_direction) * 2.0f;
+	float b = dot(ray_direction, ray_origin) * 2.0f;
+	float c = dot(ray_origin, ray_origin);
 	
-	float b = dot(sphere_to_ray, ray_direction);
-	float c = dot(sphere_to_ray, sphere_to_ray) - sphere_radius * sphere_radius;
+	float discriminant = b * b - 2.0 * a * (c - sphere_radius * sphere_radius);
 	
-	// If the ray origin is outside of the sphere and the ray direction points away from it, we can exit
-	if (c > 0.0f && b > 0.0f) { return vec4(0.0); }
+	float t = max(0.0, (-b + sqrt(discriminant)) / a);
+	vec3 intersection = ray_origin + ray_direction * t;
 	
-	float discriminant = b * b - c;
-	
-	// If the distriminant is negative, we miss the sphere
-	if (discriminant < 0.0f) { return vec4(0.0); }
-	
-	// We hit the sphere -> get the distance to the intersection
-	float distance_to_intersection = -b - sqrt(discriminant);
-	
-	// If t is negative, we're inside the sphere - we still want the distance to be positive, though
-	distance_to_intersection = abs(distance_to_intersection);
-	
-	vec3 intersection_point = ray_origin + ray_direction * distance_to_intersection;
-	
-	return vec4(intersection_point, distance_to_intersection);
+	return vec4(intersection, t);*/
+vec3 m = ray_origin - sphere_origin; 
+float b = dot(m, ray_direction); 
+float c = dot(m, m) - sphere_radius * sphere_radius; 
+
+// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0) 
+if (c > 0.0f && b > 0.0f) return vec4(0.0); 
+float discr = b*b - c; 
+
+// A negative discriminant corresponds to ray missing sphere 
+if (discr < 0.0f) return vec4(0.0); 
+
+// Ray now found to intersect sphere, compute smallest t value of intersection
+float t = -b - sqrt(discr); 
+
+// If t is negative, ray started inside sphere so clamp t to zero 
+t = abs(t); 
+vec3 q = ray_origin + t * ray_direction; 
+
+return vec4(q, t);
 }
 
 void vertex() {
@@ -84,15 +92,28 @@ void fragment() {
 	float linear_depth = -view.z;
 
 	// Get the position to start marching at
-	vec3 start_position = CAMERA_MATRIX[3].xyz;
+	vec3 start_position = (CAMERA_MATRIX * vec4(0.0, 0.0, 0.0, 1.0f)).xyz;
 	
 	// Calculate the direction using the camera projection matrix and the UV coordinates
-	vec2 centered_uv = vec2(UV.x - 0.5, -UV.y + 0.5) * 2.0;
+	vec2 centered_uv = vec2(UV.x - 0.5, -UV.y + 0.5) * 2.0f;
 	vec3 direction = (INV_PROJECTION_MATRIX * vec4(centered_uv, 0.0, 1.0)).xyz;
 	direction = normalize((CAMERA_MATRIX * vec4(direction, 0.0)).xyz);
 	
 	vec4 march_start = raySphereIntersect(start_position, direction, vec3(start_position.x, -earth_radius, start_position.z), earth_radius + cloud_begin);
 	vec4 march_end = raySphereIntersect(start_position, direction, vec3(start_position.x, -earth_radius, start_position.z), earth_radius + cloud_end);
+	
+	// No intersection at all?
+	if (march_start == vec4(0.0) && march_end == vec4(0.0)) {return;}
+	
+	if (start_position.y > cloud_begin) {
+		if (start_position.y > cloud_end) {
+			vec4 buffer = march_start;
+			march_start = march_end;
+			march_end = buffer;
+		} else {
+			march_start = vec4(start_position, length(march_start));
+		}
+	}
 	
 	// If the clouds begin further away than the closest other object, we can stop
 	if (linear_depth < 499.0 && march_start.w >= linear_depth) {
@@ -101,22 +122,18 @@ void fragment() {
 	
 	float step_length = length(march_end - march_start) / float(num_steps);
 	
-	//march_start /= step_length;
-	
 	// March forward
 	float distance_to_camera = 0.0f;
 	vec3 cloud_color = vec3(1.0, 1.0, 1.0);
 	float cloud_alpha = 0.0f;
 	
 	for (int i = 0; i < num_steps; i++) {
-		vec3 position = (march_start.xyz + distance_to_camera * direction);
+		vec3 position = march_start.xyz + distance_to_camera * direction;
 		distance_to_camera += step_length;
 		
 		float density = cloud_density(position);
 		
-		if (density > 0.5) {
-			cloud_alpha += density * 0.001;
-		}
+		cloud_alpha += density * 0.001;
 	}
 	
 	ALBEDO = cloud_color;
