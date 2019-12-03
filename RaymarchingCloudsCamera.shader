@@ -77,7 +77,7 @@ void fragment() {
 	vec3 direction = get_ray_direction(1.0 / SCREEN_PIXEL_SIZE, UV);
 	
 	// Draw the camera's view
-    COLOR = texture(camera_view, SCREEN_UV);
+    COLOR = texture(SCREEN_TEXTURE, SCREEN_UV);
 	
 	// March forward
 	float distance_to_camera = 0.0f;

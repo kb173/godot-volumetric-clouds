@@ -1,7 +1,7 @@
 extends Spatial
 
 
-onready var _head = get_node("Viewport/Head")
+onready var _head = get_node("Head")
 onready var _camera = _head.get_node("Camera")
 
 const MOUSE_SENSITIVITY = 0.07
