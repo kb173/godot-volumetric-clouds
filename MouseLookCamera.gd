@@ -5,7 +5,7 @@ onready var _head = get_node("Viewport/Head")
 onready var _camera = _head.get_node("Camera")
 
 const MOUSE_SENSITIVITY = 0.07
-const MOUSE_MOVE_SPEED = 0.1
+const MOVE_SPEED = 5.0
 
 
 func _ready():
@@ -13,7 +13,21 @@ func _ready():
 
 
 func _process(delta: float) -> void:
-	_head.translation += MOUSE_MOVE_SPEED * Vector3.FORWARD * delta
+	var movement_vec: Vector3
+	
+	if Input.is_action_pressed("move_forward"):
+		movement_vec += Vector3.FORWARD
+	
+	if Input.is_action_pressed("move_back"):
+		movement_vec += -Vector3.FORWARD
+	
+	if Input.is_action_pressed("move_right"):
+		movement_vec += Vector3.RIGHT
+	
+	if Input.is_action_pressed("move_left"):
+		movement_vec += -Vector3.RIGHT
+	
+	_head.translation += _camera.global_transform.basis * (MOVE_SPEED * movement_vec.normalized() * delta)
 
 
 func _input(event):

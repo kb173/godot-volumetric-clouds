@@ -13,5 +13,3 @@ func _ready():
 func _process(delta: float) -> void:
 	material.set_shader_param("global_transform", _camera.get_global_transform())
 	material.set_shader_param("fov", _camera.fov)
-	
-	print(_camera.get_global_transform()[2])

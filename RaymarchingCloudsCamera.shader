@@ -3,10 +3,10 @@ shader_type canvas_item;
 uniform sampler2D camera_view;
 uniform sampler2D worley;
 
-uniform float worley_uv_scale = 0.005;
+uniform float worley_uv_scale = 0.003;
 uniform float depth = 128.0;
 
-uniform int num_steps = 512;
+uniform int num_steps = 1024;
 uniform float step_length = 1.0;
 
 uniform mat4 global_transform;
@@ -15,10 +15,13 @@ varying vec3 offset;
 varying vec3 vertex_pos;
 varying vec3 start_direction;
 
-uniform float fov = 45.0;
+uniform float fov;
 uniform vec3 cameraPos = vec3(-5.0, 0.0, 0.0);
 uniform vec3 front = vec3(1.0, 0.0, 0.0);
 uniform vec3 up = vec3(0.0, 1.0, 0.0);
+
+uniform float cloud_begin = 50.0;
+uniform float cloud_end = 200.0;
 
 vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
 	vec3 mod_uvw = mod(p_uvw  * worley_uv_scale + offset, 1.0);
@@ -83,12 +86,13 @@ void fragment() {
 	
 	for (int i = 0; i < num_steps; i++) {
 		vec3 position = (start_position + distance_to_camera * direction);
+		distance_to_camera += step_length;
 		
-		float density = cloud_density(position);
+		if (position.y < cloud_begin || position.y > cloud_end) { continue; }
+		
+		float density = cloud_density(position) * (1.0 + cos(((position.y - (cloud_end - cloud_begin)) / (cloud_end - cloud_begin)) * 6.2831853)) / 2.0;
 		
 		cloud_alpha += density * 0.005;
-		
-		distance_to_camera += step_length;
 	}
 	
 	COLOR += vec4(cloud_color * cloud_alpha, 0.0);

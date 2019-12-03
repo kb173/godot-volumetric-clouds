@@ -20,15 +20,17 @@ viewport_path = NodePath("Worley_texture")
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
-shader_param/worley_uv_scale = 0.005
+shader_param/worley_uv_scale = 0.003
 shader_param/depth = 128.0
-shader_param/num_steps = 512
-shader_param/step_length = 0.5
+shader_param/num_steps = 1024
+shader_param/step_length = 1.0
 shader_param/global_transform = null
 shader_param/fov = 45.0
 shader_param/cameraPos = Vector3( -5, 0, 0 )
 shader_param/front = Vector3( 1, 0, 0 )
 shader_param/up = Vector3( 0, 1, 0 )
+shader_param/cloud_begin = 50.0
+shader_param/cloud_end = 200.0
 shader_param/camera_view = SubResource( 3 )
 shader_param/worley = SubResource( 4 )
 
