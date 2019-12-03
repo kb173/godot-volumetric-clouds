@@ -3,11 +3,11 @@ shader_type canvas_item;
 uniform sampler2D camera_view;
 uniform sampler2D worley;
 
-uniform float worley_uv_scale = 0.003;
+uniform float worley_uv_scale = 0.0001;
 uniform float depth = 128.0;
 
 uniform int num_steps = 1024;
-uniform float step_length = 1.0;
+uniform float step_length = 10.0;
 
 uniform mat4 global_transform;
 
@@ -20,8 +20,8 @@ uniform vec3 cameraPos = vec3(-5.0, 0.0, 0.0);
 uniform vec3 front = vec3(1.0, 0.0, 0.0);
 uniform vec3 up = vec3(0.0, 1.0, 0.0);
 
-uniform float cloud_begin = 50.0;
-uniform float cloud_end = 200.0;
+uniform float cloud_begin = 2000.0;
+uniform float cloud_end = 5000.0;
 
 vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
 	vec3 mod_uvw = mod(p_uvw  * worley_uv_scale + offset, 1.0);
@@ -73,7 +73,7 @@ vec3 get_ray_direction(vec2 resolution, vec2 uv)
 }
 
 void fragment() {
-	vec3 start_position = global_transform[3].xyz / worley_uv_scale;
+	vec3 start_position = global_transform[3].xyz * step_length;
 	vec3 direction = get_ray_direction(1.0 / SCREEN_PIXEL_SIZE, UV);
 	
 	// Draw the camera's view
@@ -90,7 +90,7 @@ void fragment() {
 		
 		if (position.y < cloud_begin || position.y > cloud_end) { continue; }
 		
-		float density = cloud_density(position) * (1.0 + cos(((position.y - (cloud_end - cloud_begin)) / (cloud_end - cloud_begin)) * 6.2831853)) / 2.0;
+		float density = cloud_density(position) * (1.0 + -cos(((position.y - (cloud_begin)) / (cloud_end - cloud_begin)) * 6.2831853)) / 2.0;
 		
 		cloud_alpha += density * 0.005;
 	}
