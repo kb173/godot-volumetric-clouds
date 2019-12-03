@@ -1,6 +1,6 @@
-shader_type canvas_item;
+shader_type spatial;
+render_mode unshaded;
 
-uniform sampler2D camera_view;
 uniform sampler2D worley;
 
 uniform float worley_uv_scale = 0.0001;
@@ -9,16 +9,7 @@ uniform float depth = 128.0;
 uniform int num_steps = 1024;
 uniform float step_length = 10.0;
 
-uniform mat4 global_transform;
-
 varying vec3 offset;
-varying vec3 vertex_pos;
-varying vec3 start_direction;
-
-uniform float fov;
-uniform vec3 cameraPos = vec3(-5.0, 0.0, 0.0);
-uniform vec3 front = vec3(1.0, 0.0, 0.0);
-uniform vec3 up = vec3(0.0, 1.0, 0.0);
 
 uniform float cloud_begin = 2000.0;
 uniform float cloud_end = 5000.0;
@@ -50,34 +41,23 @@ float cloud_density(vec3 p_pos) {
 	return value;
 }
 
-// Adapted from https://github.com/PLUkraine/raymarching-godot
-vec3 get_ray_direction(vec2 resolution, vec2 uv)
-{
-	float aspect = resolution.x / resolution.y;
-	float fov2 = radians(fov) / 2.0;
-	
-	// convert coordinates from [0, 1] to [-1, 1]
-	// and invert y axis to flow from bottom to top
-	vec2 screenCoord = (uv - 0.5) * 2.0;
-	screenCoord.x *= aspect;
-	screenCoord.y = -screenCoord.y;
-	
-	vec2 offsets = screenCoord * tan(fov2);
-	
-	vec3 rayFront = -normalize(global_transform[2].xyz);
-	vec3 rayRight = normalize(cross(rayFront, normalize(global_transform[1].xyz)));
-	vec3 rayUp = cross(rayRight, rayFront);
-	vec3 rayDir = rayFront + rayRight * offsets.x + rayUp * offsets.y;
-	
-	return normalize(rayDir);
+void vertex() {
+	POSITION = vec4(VERTEX, 1.0);
 }
 
 void fragment() {
-	vec3 start_position = global_transform[3].xyz * step_length;
-	vec3 direction = get_ray_direction(1.0 / SCREEN_PIXEL_SIZE, UV);
+	float screen_depth = texture(DEPTH_TEXTURE, SCREEN_UV).x;
+	vec3 ndc = vec3(SCREEN_UV, screen_depth) * 2.0 - 1.0;
+	vec4 view = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	view.xyz /= view.w;
+	float linear_depth = -view.z;
+
+	vec3 start_position = CAMERA_MATRIX[3].xyz * step_length;
 	
-	// Draw the camera's view
-    COLOR = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec2 centered_uv = vec2(UV.x - 0.5, -UV.y + 0.5) * 2.0;
+	vec3 direction = (INV_PROJECTION_MATRIX * vec4(centered_uv, 0.0, 1.0)).xyz;
+	direction = normalize((CAMERA_MATRIX * vec4(direction, 0.0)).xyz);
+	
 	
 	// March forward
 	float distance_to_camera = 0.0f;
@@ -95,5 +75,6 @@ void fragment() {
 		cloud_alpha += density * 0.005;
 	}
 	
-	COLOR += vec4(cloud_color * cloud_alpha, 0.0);
+	ALBEDO = cloud_color;
+	ALPHA = cloud_alpha;
 }
