@@ -134,7 +134,10 @@ void fragment() {
 			march_start = march_end;
 			march_end = buffer;
 		} else {
-			march_end = march_start;
+			if (march_end.w > 50000.0) {
+				march_end = march_start + vec4(direction, 0.0) * 10000.0;
+			}
+			
 			march_start = vec4(start_position, 0.0);
 		}
 	}
