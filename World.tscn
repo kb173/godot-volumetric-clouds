@@ -66,10 +66,12 @@ script = ExtResource( 4 )
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.9078, 0 )
+visible = false
 mesh = SubResource( 7 )
 material/0 = null
 
 [node name="MeshInstance2" type="MeshInstance" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0 )
+visible = false
 mesh = SubResource( 8 )
 material/0 = null

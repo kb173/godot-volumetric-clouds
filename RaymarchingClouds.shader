@@ -128,12 +128,13 @@ void fragment() {
 	if (start_position.y > cloud_begin) {
 		if (start_position.y > cloud_end) {
 			if (march_start == vec4(0.0)) {
-				march_start = march_end + vec4(direction, 0.0) * 1000.0;
+				march_start = march_end + vec4(direction, 0.0) * 10000.0;
 			}
 			vec4 buffer = march_start;
 			march_start = march_end;
 			march_end = buffer;
 		} else {
+			march_end = march_start;
 			march_start = vec4(start_position, 0.0);
 		}
 	}
@@ -143,7 +144,7 @@ void fragment() {
 		return;
 	}
 	
-	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), 300.0);
+	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), 3000.0);
 	
 	// March forward
 	float distance_to_camera = 0.0f;
@@ -167,10 +168,10 @@ void fragment() {
 		
 		float density_inside_cloudlayer = (distance_to_center - earth_radius - cloud_begin) / (cloud_end - cloud_begin);
 		
-		density = density * (1.0 + -cos((density_inside_cloudlayer * 6.2831853 + 2.0))) / 2.0;
+		density = density * (1.0 + -cos((density_inside_cloudlayer * 4.2831853 + 3.0))) / 2.0;
 		
 		if (density > 1.0) {
-			cloud_alpha += density * 0.02; //  / (step_length * 0.1); maybe?
+			cloud_alpha += density * 0.0001 * step_length;
 		}
 		
 		// If the clouds begin further away than the closest other object, we can stop
