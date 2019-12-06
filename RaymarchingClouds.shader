@@ -15,6 +15,8 @@ uniform float cloud_end = 10000.0;
 
 uniform float earth_radius = 6370000.0f;
 
+uniform vec3 sun_direction = vec3(0.0, -0.5, 0.5);
+
 // Get the value by which vertex at given point must be lowered to simulate the earth's curvature 
 float get_curve_offset(float distance_squared, float radius) {
 	return sqrt(radius * radius + distance_squared) - radius;
@@ -139,7 +141,7 @@ void fragment() {
 			// Inside the clouds
 			if (march_start != vec4(0.0)) {
 				// If we did intersect with the inner sphere, that should be our end point (we're looking downwards)
-				march_end = march_start
+				march_end = march_start;
 			}
 			
 			// If we're inside the clouds, there could be one right in front of us, so our camera position is
@@ -156,6 +158,8 @@ void fragment() {
 	// Choose the step length so that we always march from march_start to march_end, with our constant num_steps.
 	// However, we do limit this step_length because extremely large steps only cause artifacts.
 	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), 1000.0);
+	
+	vec3 projected_sun_direction = normalize((INV_CAMERA_MATRIX * INV_PROJECTION_MATRIX * vec4(-sun_direction, 0.0)).xyz);
 	
 	// March forward
 	float distance_to_camera = 0.0f;
@@ -184,23 +188,30 @@ void fragment() {
 		// Calculate the cloud density - we mix two textures, scaled and offset by time, to get some dynamics
 		float density = cloud_density(position + vec3(TIME * 50.0)) + cloud_density((position + vec3(-TIME * 50.0)) * 0.1);
 		
-		// Calculate how far we're in the layer from 0 (start of clouds, closer to earth) to 1 (end of clouds) 
-		float distance_within_cloudlayer = (distance_to_center - earth_radius - cloud_begin) / (cloud_end - cloud_begin);
-		
-		// We give clouds a more cloudy shape by applying a vertical cosine to the density
-		// This causes the typical flat bottom of cumulus clouds
-		density = density * (1.0 + -cos((distance_within_cloudlayer * 4.2831853 + 3.0))) / 2.0;
-		
-		// We use a density cutoff to have some areas with clear sky
-		if (density > 1.0) {
-			cloud_alpha += density * 0.0001 * step_length;
+		if (density > 0.0) {
+			// Calculate how far we're in the layer from 0 (start of clouds, closer to earth) to 1 (end of clouds) 
+			float distance_within_cloudlayer = (distance_to_center - earth_radius - cloud_begin) / (cloud_end - cloud_begin);
+			
+			// We give clouds a more cloudy shape by applying a vertical cosine to the density
+			// This causes the typical flat bottom of cumulus clouds
+			density = density * (1.0 + -cos((distance_within_cloudlayer * 4.2831853 + 3.0))) / 2.0;
+			
+			// March towards the sun
+			vec3 sun_march_position = position + 700.0 * projected_sun_direction;
+			float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0)) + cloud_density((sun_march_position + vec3(-TIME * 50.0)) * 0.1);
+			
+			// We use a density cutoff to have some areas with clear sky
+			if (density > 1.0) {
+				cloud_color = vec3(0.6 + (light_density - density) * 0.4);
+				cloud_alpha += density * 0.0001 * step_length;
+			}
+			
+			// If the clouds begin further away than the closest other object, we can stop
+			// TODO: We already checked this before, could this be required again here?
+			/*if (linear_depth < max_depth && distance_to_camera >= linear_depth) {
+				break;
+			}*/
 		}
-		
-		// If the clouds begin further away than the closest other object, we can stop
-		// TODO: We already checked this before, could this be required again here?
-		/*if (linear_depth < max_depth && distance_to_camera >= linear_depth) {
-			break;
-		}*/
 	}
 	
 	// Apply our color and alpha
