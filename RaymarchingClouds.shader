@@ -197,12 +197,12 @@ void fragment() {
 			// This causes the typical flat bottom of cumulus clouds
 			density = density * (1.0 + -cos((distance_within_cloudlayer * 4.2831853 + 3.0))) / 2.0;
 			
-			// March towards the sun
-			vec3 sun_march_position = position + 700.0 * projected_sun_direction;
-			float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0)) + cloud_density((sun_march_position + vec3(-TIME * 50.0)) * 0.1);
-			
 			// We use a density cutoff to have some areas with clear sky
 			if (density > density_cutoff) {
+				// March towards the sun
+				vec3 sun_march_position = position + 700.0 * projected_sun_direction;
+				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0)) + cloud_density((sun_march_position + vec3(-TIME * 50.0)) * 0.1);
+			
 				cloud_color = vec3(0.8 + (light_density - density) * 0.3);
 				cloud_alpha += density * 0.0002 * step_length;
 			}
