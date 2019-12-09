@@ -12,6 +12,7 @@ varying vec3 offset;
 
 uniform float cloud_begin = 1500.0;
 uniform float cloud_end = 10000.0;
+uniform float density_cutoff = 1.2;
 
 uniform float earth_radius = 6370000.0f;
 
@@ -201,9 +202,9 @@ void fragment() {
 			float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0)) + cloud_density((sun_march_position + vec3(-TIME * 50.0)) * 0.1);
 			
 			// We use a density cutoff to have some areas with clear sky
-			if (density > 1.0) {
-				cloud_color = vec3(0.6 + (light_density - density) * 0.4);
-				cloud_alpha += density * 0.0001 * step_length;
+			if (density > density_cutoff) {
+				cloud_color = vec3(0.8 + (light_density - density) * 0.3);
+				cloud_alpha += density * 0.0002 * step_length;
 			}
 			
 			// If the clouds begin further away than the closest other object, we can stop
