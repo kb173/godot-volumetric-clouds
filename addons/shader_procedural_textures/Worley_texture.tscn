@@ -105,7 +105,6 @@ handle_input_locally = false
 usage = 0
 render_target_update_mode = 1
 script = ExtResource( 1 )
-texture_size = Vector3( 128, 128, 128 )
 
 [node name="ColorRect" type="ColorRect" parent="."]
 material = SubResource( 3 )

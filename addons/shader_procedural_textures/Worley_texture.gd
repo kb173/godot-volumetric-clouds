@@ -1,6 +1,6 @@
 extends Viewport
 
-export var texture_size = Vector3(128.0, 128.0, 1.0) setget set_texture_size, get_texture_size
+export var texture_size = Vector3(128.0, 128.0, 16.0) setget set_texture_size, get_texture_size
 export var max_distance = 0.5 setget set_max_distance, get_max_distance
 
 var color_rect = null
