@@ -1,9 +1,10 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://addons/shader_procedural_textures/Worley_texture.tscn" type="PackedScene" id=1]
 [ext_resource path="res://MouseLookCamera.gd" type="Script" id=2]
 [ext_resource path="res://RaymarchingClouds.shader" type="Shader" id=3]
 [ext_resource path="res://CloudRenderer.gd" type="Script" id=4]
+[ext_resource path="res://weather_map_test.png" type="Texture" id=5]
 
 [sub_resource type="ProceduralSky" id=1]
 
@@ -20,18 +21,22 @@ viewport_path = NodePath("Worley_texture")
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
-shader_param/worley_uv_scale = 4e-05
 shader_param/depth = 128.0
 shader_param/num_steps = 48
 shader_param/cloud_begin = 1500.0
 shader_param/cloud_end = 10000.0
-shader_param/density_cutoff = 0.6
 shader_param/sun_march_distance = 2000.0
-shader_param/rain_absorption = 2.0
+shader_param/min_rain_absorption = 0.5
+shader_param/max_rain_absorption = 4.3
+shader_param/min_density = 0.1
+shader_param/max_density = 0.9
+shader_param/min_scale = 2e-05
+shader_param/max_scale = 6e-05
 shader_param/eccentricity = 0.1
 shader_param/earth_radius = 6.37e+06
 shader_param/sun_direction = Vector3( 0, -0.7, 0.7 )
 shader_param/worley = SubResource( 4 )
+shader_param/weather_map = ExtResource( 5 )
 
 [sub_resource type="SpatialMaterial" id=6]
 albedo_color = Color( 0, 0.211765, 0.145098, 1 )

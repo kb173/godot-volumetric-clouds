@@ -2,8 +2,8 @@ shader_type spatial;
 render_mode unshaded;
 
 uniform sampler2D worley;
+uniform sampler2D weather_map;
 
-uniform float worley_uv_scale = 0.00004;
 uniform float depth = 128.0;
 
 uniform int num_steps = 48;
@@ -12,10 +12,17 @@ varying vec3 offset;
 
 uniform float cloud_begin = 1500.0;
 uniform float cloud_end = 10000.0;
-uniform float density_cutoff = 0.6;
 uniform float sun_march_distance = 2000.0;
 
-uniform float rain_absorption = 2.0;
+uniform float min_rain_absorption = 0.5;
+uniform float max_rain_absorption = 4.3;
+
+uniform float min_density = 0.1;
+uniform float max_density = 0.9;
+
+uniform float min_scale = 0.00002;
+uniform float max_scale = 0.00006;
+
 uniform float eccentricity = 0.1; // Forward scattering
 
 uniform float earth_radius = 6370000.0f;
@@ -28,8 +35,8 @@ float get_curve_offset(float distance_squared, float radius) {
 }
 
 // Adapted from https://github.com/BastiaanOlij/godot-worley-shader/blob/master/raymarch.shader
-vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
-	p_uvw *= worley_uv_scale;
+vec4 texture3d(sampler2D p_texture, vec3 p_uvw, float scale) {
+	p_uvw *= scale;
 	vec3 mod_uvw = mod(p_uvw + offset, 1.0);
 	
 	float fd = mod_uvw.z * depth;
@@ -44,8 +51,8 @@ vec4 texture3d(sampler2D p_texture, vec3 p_uvw) {
 	return mix(col1, col2, fd - fz);
 }
 
-float cloud_density(vec3 p_pos) {
-	vec4 density_in_texture = texture3d(worley, p_pos);
+float cloud_density(vec3 p_pos, float scale) {
+	vec4 density_in_texture = texture3d(worley, p_pos, scale);
 	
 	// join our octaves
 	float value = density_in_texture.r + (0.5 * density_in_texture.g) + (0.25 * density_in_texture.b);
@@ -96,7 +103,7 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float get_light_energy(float density) {
+float get_light_energy(float density, float rain_absorption) {
 	return 2.0 * exp(-density * rain_absorption) * (1.0 - exp(-2.0 * density));
 }
 
@@ -201,6 +208,13 @@ void fragment() {
 		// Calculate the position of the current sample point
 		vec3 position = march_start.xyz + distance_to_camera * direction;
 		
+		// Get the weather map value at this position
+		vec3 weather = texture(weather_map, position.xz * 0.00001).xyz;
+		
+		float density_cutoff = mix(min_density, max_density, 1.0 - weather.x);
+		float rain_absorption = mix(min_rain_absorption, max_rain_absorption, weather.y);
+		float worley_uv_scale = mix(min_scale, max_scale, weather.z);
+		
 		// Step forward (for the next iteration)
 		distance_to_camera += step_length;
 		
@@ -210,7 +224,7 @@ void fragment() {
 		float distance_to_center = length(earth_center - position);
 		
 		// Calculate the cloud density - we mix two textures, scaled and offset by time, to get some dynamics
-		float density = cloud_density(position + vec3(TIME * 50.0));
+		float density = cloud_density(position + vec3(TIME * 50.0), worley_uv_scale);
 		
 		if (density > 0.0) {
 			// Calculate how far we're in the layer from 0 (start of clouds, closer to earth) to 1 (end of clouds) 
@@ -225,17 +239,17 @@ void fragment() {
 				// TODO: Very ugly testing stuff
 				// Basically we want the edges of the cloud to fade out nicely, so we check another scaled texture at the border
 				// The time scaled differently makes these edges fade around nicely
-				|| density > density_cutoff - cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0) * 0.11) {
+				|| density > density_cutoff - cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0, worley_uv_scale) * 0.11) {
 				// March towards the sun
 				
 				if (!(density > density_cutoff)) {
 					// Add the faded edges again (INEFFICIENT)
-					density -= cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0) * 0.05;
+					density -= cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0, worley_uv_scale) * 0.05;
 				}
 				
 				vec3 sun_march_position = position + sun_march_distance * projected_sun_direction;
-				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0));
-				float light_transmittance = get_light_energy(light_density);
+				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0), worley_uv_scale);
+				float light_transmittance = get_light_energy(light_density, rain_absorption);
 				
 				float cos_light_view_angle = dot(direction, projected_sun_direction);
 				light_transmittance *= henyey_greenstein(cos_light_view_angle);
