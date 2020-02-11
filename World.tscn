@@ -20,13 +20,13 @@ viewport_path = NodePath("Worley_texture")
 [sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
-shader_param/worley_uv_scale = 5e-05
+shader_param/worley_uv_scale = 4e-05
 shader_param/depth = 128.0
-shader_param/num_steps = 128
+shader_param/num_steps = 48
 shader_param/cloud_begin = 2000.0
 shader_param/cloud_end = 10000.0
-shader_param/density_cutoff = 0.66
-shader_param/sun_march_distance = 500.0
+shader_param/density_cutoff = 0.6
+shader_param/sun_march_distance = 2000.0
 shader_param/rain_absorption_gain = 0.1
 shader_param/earth_radius = 6.37e+06
 shader_param/sun_direction = Vector3( 0, -0.5, 0.5 )

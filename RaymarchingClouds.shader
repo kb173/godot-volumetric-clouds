@@ -3,7 +3,7 @@ render_mode unshaded;
 
 uniform sampler2D worley;
 
-uniform float worley_uv_scale = 0.00005;
+uniform float worley_uv_scale = 0.00004;
 uniform float depth = 128.0;
 
 uniform int num_steps = 128;
@@ -90,8 +90,13 @@ vec4 ray_sphere_intersect(vec3 ray_origin, vec3 ray_direction, vec3 sphere_origi
 	return vec4(q, t);
 }
 
+// Returns a random value for a given coefficient.
 float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float get_light_energy(float density, float rain_absorption, float eccentricity, float light_view_angle) {
+	return 2.0 * exp(-density * rain_absorption) * (1.0 - exp(-2.0 * density));
 }
 
 void vertex() {
@@ -130,6 +135,8 @@ void fragment() {
 	// If we didn't intersect with any sphere, we're above the clouds, looking into space
 	if (march_start == vec4(0.0) && march_end == vec4(0.0)) {return;}
 	
+	float march_limit = 3000.0;
+	
 	// march_start and march_end are only correct if we're below the clouds. If we're inside or above the clouds,
 	//  things get a bit more complicated:
 	if (camera_position.y > cloud_begin) {
@@ -164,25 +171,27 @@ void fragment() {
 	}
 	
 	// Something like this for temporal AA:
-	//march_start -= vec4(direction, 0.0) * rand(vec2(TIME,0.0)) * 2000.0;
+	march_start -= vec4(direction, 0.0) * rand(direction.xz * TIME) * 1000.0;
 	
 	// Choose the step length so that we always march from march_start to march_end, with our constant num_steps.
 	// However, we do limit this step_length because extremely large steps only cause artifacts.
-	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), 1000.0);
+	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), march_limit);
 	
-	vec3 projected_sun_direction = normalize((INV_CAMERA_MATRIX * INV_PROJECTION_MATRIX * vec4(-sun_direction, 0.0)).xyz);
+	vec3 projected_sun_direction = normalize((vec4(-sun_direction, 0.0)).xyz);
 	
 	// March forward
 	float distance_to_camera = 0.0f;
-	vec3 cloud_color = vec3(0.9, 0.8, 0.8);
+	vec3 cloud_color = vec3(0.0);
+	float light_energy = 0.0;
+	float transmittance = 1.0;
 	float cloud_alpha = 0.0f;
 	
 	for (int i = 0; i < num_steps; i++) {
 		// If we're already fully opaque, there's no point in continuing
-		if (cloud_alpha > 0.99) {
-			cloud_alpha = 1.0;
-			break;
-		}
+//		if (cloud_alpha > 0.99) {
+//			cloud_alpha = 1.0;
+//			break;
+//		}
 		
 		// Calculate the position of the current sample point
 		vec3 position = march_start.xyz + distance_to_camera * direction;
@@ -195,10 +204,6 @@ void fragment() {
 		
 		float distance_to_center = length(earth_center - position);
 		
-		// TODO: Is this required? It would check again whether we're inside the marching volume, but I think that's
-		//  always the case due to previous checks
-		// if (distance_to_center < earth_radius + cloud_begin || distance_to_center > earth_radius + cloud_end) {continue;}
-		
 		// Calculate the cloud density - we mix two textures, scaled and offset by time, to get some dynamics
 		float density = cloud_density(position + vec3(TIME * 50.0));
 		
@@ -208,7 +213,7 @@ void fragment() {
 			
 			// We give clouds a more cloudy shape by applying a vertical cosine to the density
 			// This causes the typical flat bottom of cumulus clouds
-			density = density * (1.0 + -cos((distance_within_cloudlayer * 4.2831853 + 3.0))) / 2.0;
+			density = density * (1.0 + -cos((distance_within_cloudlayer * 4.2831853 + 2.8))) / 2.0;
 			
 			// We use a density cutoff to have some areas with clear sky
 			if (density > density_cutoff
@@ -217,22 +222,37 @@ void fragment() {
 				// The time scaled differently makes these edges fade around nicely
 				|| density > density_cutoff - cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0) * 0.11) {
 				// March towards the sun
+				
+				if (!(density > density_cutoff)) {
+					// Add the faded edges again (INEFFICIENT)
+					density -= cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0) * 0.05;
+				}
+				
+				// TODO: Something like density - density_cutoff to scale it back to 0-1
+				
 				vec3 sun_march_position = position + sun_march_distance * projected_sun_direction;
 				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0));
+				float light_transmittance = get_light_energy(light_density, 2.0, 1.0, 1.0);
+				
+				light_energy += density * transmittance * light_transmittance * 3.0;
+				
+				transmittance *= exp(-density * 0.5) * 0.3; // Changes how much of the cloud is white
 				
 				float cos_light_view_angle = dot(direction, projected_sun_direction);
 			
-				cloud_color = vec3(0.9 + (light_density - density) * 0.9);
 				cloud_alpha += density * 0.0005 * step_length;
+				
+				// TODO https://github.com/SebLague/Clouds/blob/master/Assets/Scripts/Clouds/Shaders/Clouds.shader
 			}
 			
-			// If the clouds begin further away than the closest other object, we can stop
-			// TODO: We already checked this before, could this be required again here?
-			/*if (linear_depth < max_depth && distance_to_camera >= linear_depth) {
-				break;
-			}*/
 		}
 	}
+	
+	if (light_energy > 1.0) { light_energy = 1.0; }
+	if (cloud_alpha > 1.0) { cloud_alpha = 1.0; }
+	
+	//cloud_alpha = 1.0 - transmittance;
+	cloud_color = vec3(light_energy + transmittance);
 	
 	// Apply our color and alpha
 	ALBEDO = cloud_color;
