@@ -28,8 +28,9 @@ shader_param/cloud_end = 10000.0
 shader_param/density_cutoff = 0.6
 shader_param/sun_march_distance = 2000.0
 shader_param/rain_absorption = 2.0
+shader_param/eccentricity = 0.1
 shader_param/earth_radius = 6.37e+06
-shader_param/sun_direction = Vector3( 0, -0.5, 0.5 )
+shader_param/sun_direction = Vector3( 0, -0.7, 0.7 )
 shader_param/worley = SubResource( 4 )
 
 [sub_resource type="SpatialMaterial" id=6]
@@ -69,12 +70,10 @@ script = ExtResource( 4 )
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.9078, 0 )
-visible = false
 mesh = SubResource( 7 )
 material/0 = null
 
 [node name="MeshInstance2" type="MeshInstance" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0 )
-visible = false
 mesh = SubResource( 8 )
 material/0 = null

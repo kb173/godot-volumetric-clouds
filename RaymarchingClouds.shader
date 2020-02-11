@@ -16,6 +16,7 @@ uniform float density_cutoff = 0.6;
 uniform float sun_march_distance = 2000.0;
 
 uniform float rain_absorption = 2.0;
+uniform float eccentricity = 0.1; // Forward scattering
 
 uniform float earth_radius = 6370000.0f;
 
@@ -95,8 +96,12 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float get_light_energy(float density, float eccentricity, float light_view_angle) {
+float get_light_energy(float density) {
 	return 2.0 * exp(-density * rain_absorption) * (1.0 - exp(-2.0 * density));
+}
+
+float henyey_greenstein(float cos_light_view_angle) {
+	return ( ( 1.0 - eccentricity * eccentricity ) / pow ( ( 1.0 + eccentricity * eccentricity - 2.0 * eccentricity * cos_light_view_angle ), 3.0 / 2.0) ) / 4.0 * 3.1415;
 }
 
 void vertex() {
@@ -188,10 +193,10 @@ void fragment() {
 	
 	for (int i = 0; i < num_steps; i++) {
 		// If we're already fully opaque, there's no point in continuing
-//		if (cloud_alpha > 0.99) {
-//			cloud_alpha = 1.0;
-//			break;
-//		}
+		if (cloud_alpha > 0.99) {
+			cloud_alpha = 1.0;
+			break;
+		}
 		
 		// Calculate the position of the current sample point
 		vec3 position = march_start.xyz + distance_to_camera * direction;
@@ -228,21 +233,18 @@ void fragment() {
 					density -= cloud_density(position * 10.0 + vec3(TIME * 100.0) * 10.0) * 0.05;
 				}
 				
-				// TODO: Something like density - density_cutoff to scale it back to 0-1
-				
 				vec3 sun_march_position = position + sun_march_distance * projected_sun_direction;
 				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0));
-				float light_transmittance = get_light_energy(light_density, 1.0, 1.0);
+				float light_transmittance = get_light_energy(light_density);
+				
+				float cos_light_view_angle = dot(direction, projected_sun_direction);
+				light_transmittance *= henyey_greenstein(cos_light_view_angle);
 				
 				light_energy += density * transmittance * light_transmittance * 3.0;
 				
 				transmittance *= exp(-density * 0.5) * 0.3; // Changes how much of the cloud is white
-				
-				float cos_light_view_angle = dot(direction, projected_sun_direction);
 			
 				cloud_alpha += density * 0.0005 * step_length;
-				
-				// TODO https://github.com/SebLague/Clouds/blob/master/Assets/Scripts/Clouds/Shaders/Clouds.shader
 			}
 			
 		}
@@ -251,7 +253,8 @@ void fragment() {
 	if (light_energy > 1.0) { light_energy = 1.0; }
 	if (cloud_alpha > 1.0) { cloud_alpha = 1.0; }
 	
-	//cloud_alpha = 1.0 - transmittance;
+	// TODO: This would be physically correct, but it doesn't look good...
+	//  cloud_alpha = 1.0 - transmittance;
 	cloud_color = vec3(light_energy + transmittance);
 	
 	// Apply our color and alpha

@@ -19,6 +19,10 @@ config/name="godot-clouds"
 run/main_scene="res://World.tscn"
 config/icon="res://icon.png"
 
+[display]
+
+window/vsync/use_vsync=false
+
 [input]
 
 move_forward={
