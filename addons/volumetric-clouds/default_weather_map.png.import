@@ -2,8 +2,8 @@
 
 importer="texture"
 type="StreamTexture"
-path.s3tc="res://.import/default_weather_map.png-2c4c55374298d8bdfaf044e3f6bc5a48.s3tc.stex"
-path.etc2="res://.import/default_weather_map.png-2c4c55374298d8bdfaf044e3f6bc5a48.etc2.stex"
+path.s3tc="res://.import/default_weather_map.png-0bf456899097be27057f64c0a8dadd7d.s3tc.stex"
+path.etc2="res://.import/default_weather_map.png-0bf456899097be27057f64c0a8dadd7d.etc2.stex"
 metadata={
 "imported_formats": [ "s3tc", "etc2" ],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://VolumetricClouds/default_weather_map.png"
-dest_files=[ "res://.import/default_weather_map.png-2c4c55374298d8bdfaf044e3f6bc5a48.s3tc.stex", "res://.import/default_weather_map.png-2c4c55374298d8bdfaf044e3f6bc5a48.etc2.stex" ]
+source_file="res://addons/volumetric-clouds/default_weather_map.png"
+dest_files=[ "res://.import/default_weather_map.png-0bf456899097be27057f64c0a8dadd7d.s3tc.stex", "res://.import/default_weather_map.png-0bf456899097be27057f64c0a8dadd7d.etc2.stex" ]
 
 [params]
 
