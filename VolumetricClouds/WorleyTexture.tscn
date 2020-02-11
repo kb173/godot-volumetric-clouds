@@ -1,6 +1,10 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://addons/shader_procedural_textures/Worley_texture.gd" type="Script" id=1]
+[ext_resource path="res://VolumetricClouds/WorleyTexture.gd" type="Script" id=1]
+
+
+
+
 
 [sub_resource type="World" id=1]
 

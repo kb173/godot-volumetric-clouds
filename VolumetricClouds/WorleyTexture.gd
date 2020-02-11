@@ -1,5 +1,12 @@
 extends Viewport
 
+
+#
+# Worley texture generator for ViewportTextures
+# Adapted from Bastiaan Olij: https://github.com/BastiaanOlij/godot-worley-shader
+# 
+
+
 export var texture_size = Vector3(128.0, 128.0, 16.0) setget set_texture_size, get_texture_size
 export var max_distance = 0.5 setget set_max_distance, get_max_distance
 
