@@ -6,16 +6,16 @@ uniform sampler2D worley;
 uniform float worley_uv_scale = 0.00004;
 uniform float depth = 128.0;
 
-uniform int num_steps = 128;
+uniform int num_steps = 48;
 
 varying vec3 offset;
 
 uniform float cloud_begin = 1500.0;
 uniform float cloud_end = 10000.0;
-uniform float density_cutoff = 1.2;
-uniform float sun_march_distance = 500.0;
+uniform float density_cutoff = 0.6;
+uniform float sun_march_distance = 2000.0;
 
-uniform float rain_absorption_gain = 0.1;
+uniform float rain_absorption = 2.0;
 
 uniform float earth_radius = 6370000.0f;
 
@@ -95,7 +95,7 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float get_light_energy(float density, float rain_absorption, float eccentricity, float light_view_angle) {
+float get_light_energy(float density, float eccentricity, float light_view_angle) {
 	return 2.0 * exp(-density * rain_absorption) * (1.0 - exp(-2.0 * density));
 }
 
@@ -232,7 +232,7 @@ void fragment() {
 				
 				vec3 sun_march_position = position + sun_march_distance * projected_sun_direction;
 				float light_density = cloud_density(sun_march_position + vec3(TIME * 50.0));
-				float light_transmittance = get_light_energy(light_density, 2.0, 1.0, 1.0);
+				float light_transmittance = get_light_energy(light_density, 1.0, 1.0);
 				
 				light_energy += density * transmittance * light_transmittance * 3.0;
 				
