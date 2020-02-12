@@ -6,24 +6,44 @@ uniform sampler2D weather_map;
 
 uniform float depth = 128.0;
 
+// Increasing this value increases noise, but hides 3D aliasing
+uniform float random_vector_offset_amount = 2000.0;
+
+uniform float max_step_length = 5000.0;
+
+// Raymarching steps taken for each sample. Increasing improves quality, but decreases performance
 uniform int num_steps = 48;
 
 varying vec3 offset;
 
+// y height at which the clouds start
 uniform float cloud_begin = 1500.0;
+
+// Maximum y height at which the clouds end (usually below)
 uniform float cloud_end = 10000.0;
+
+// One step is taken towards the sun for lighting. This value changes how far away
+// that step is. Should probably be left around this value, weird shadows otherwise.
 uniform float sun_march_distance = 2000.0;
 
+// Factor for how much alpha is added based on the density.
+// Increasing causes clouds to have much clearer edges; decreasing causes them to be more transparent.
+uniform float cloud_definition_factor = 0.0006;
+
+// Rain absorption range which the G weather texture channel is mapped to
 uniform float min_rain_absorption = 0.5;
 uniform float max_rain_absorption = 4.3;
 
+// Density range which the R weather texture channel is mapped to
 uniform float min_density = 0.1;
 uniform float max_density = 0.9;
 
+// Worley noise scale range which the B weather texture channel is mapped to
 uniform float min_scale = 0.00002;
 uniform float max_scale = 0.00006;
 
-uniform float eccentricity = 0.15; // Forward scattering
+// Factor for simulating light scattering. Should be left around this value for forward scattering.
+uniform float eccentricity = 0.1;
 
 uniform float earth_radius = 6370000.0f;
 uniform float lowest_march_limit = -5000.0;
@@ -149,8 +169,6 @@ void fragment() {
 	// If we didn't intersect with any sphere, we're above the clouds, looking into space
 	if (march_start == vec4(0.0) && march_end == vec4(0.0)) {return;}
 	
-	float march_limit = 3000.0;
-	
 	// march_start and march_end are only correct if we're below the clouds. If we're inside or above the clouds,
 	//  things get a bit more complicated:
 	if (camera_position.y > cloud_begin) {
@@ -185,11 +203,11 @@ void fragment() {
 	}
 	
 	// Something like this for temporal AA:
-	march_start -= vec4(direction, 0.0) * rand(direction.xz * TIME) * 1000.0;
+	march_start -= vec4(direction, 0.0) * rand(direction.xz * TIME) * random_vector_offset_amount;
 	
 	// Choose the step length so that we always march from march_start to march_end, with our constant num_steps.
 	// However, we do limit this step_length because extremely large steps only cause artifacts.
-	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), march_limit);
+	float step_length = min(length(march_end.xyz - march_start.xyz) / float(num_steps), max_step_length);
 	
 	vec3 projected_sun_direction = normalize((vec4(-sun_direction, 0.0)).xyz);
 	
@@ -260,7 +278,7 @@ void fragment() {
 				
 				transmittance *= exp(-density * 0.5) * 0.3; // Changes how much of the cloud is white
 			
-				cloud_alpha += density * 0.0005 * step_length;
+				cloud_alpha += density * cloud_definition_factor * step_length;
 			}
 			
 		}
