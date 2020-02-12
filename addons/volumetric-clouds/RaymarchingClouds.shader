@@ -23,10 +23,11 @@ uniform float max_density = 0.9;
 uniform float min_scale = 0.00002;
 uniform float max_scale = 0.00006;
 
-uniform float eccentricity = 0.1; // Forward scattering
+uniform float eccentricity = 0.15; // Forward scattering
 
 uniform float earth_radius = 6370000.0f;
 
+uniform float sun_energy = 1.0;
 uniform vec3 sun_direction = vec3(0.0, -0.5, 0.5);
 
 // Get the value by which vertex at given point must be lowered to simulate the earth's curvature 
@@ -254,7 +255,7 @@ void fragment() {
 				float cos_light_view_angle = dot(direction, projected_sun_direction);
 				light_transmittance *= henyey_greenstein(cos_light_view_angle);
 				
-				light_energy += density * transmittance * light_transmittance * 3.0;
+				light_energy += density * transmittance * light_transmittance * 3.0 * sun_energy;
 				
 				transmittance *= exp(-density * 0.5) * 0.3; // Changes how much of the cloud is white
 			
