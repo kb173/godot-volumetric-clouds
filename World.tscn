@@ -30,6 +30,7 @@ shader_param/min_scale = 2e-05
 shader_param/max_scale = 6e-05
 shader_param/eccentricity = 0.15
 shader_param/earth_radius = 6.37e+06
+shader_param/lowest_march_limit = -5000.0
 shader_param/sun_energy = 1.0
 shader_param/sun_direction = Vector3( 0, -0.7, 0.7 )
 shader_param/worley = SubResource( 3 )

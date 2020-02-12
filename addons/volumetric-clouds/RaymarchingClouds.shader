@@ -26,6 +26,7 @@ uniform float max_scale = 0.00006;
 uniform float eccentricity = 0.15; // Forward scattering
 
 uniform float earth_radius = 6370000.0f;
+uniform float lowest_march_limit = -5000.0;
 
 uniform float sun_energy = 1.0;
 uniform vec3 sun_direction = vec3(0.0, -0.5, 0.5);
@@ -220,7 +221,7 @@ void fragment() {
 		distance_to_camera += step_length;
 		
 		// We don't need to render clouds on the other side of the earth, so if we're too far down, we stop
-		if (position.y < -500.0) {break;}
+		if (position.y < lowest_march_limit) {break;}
 		
 		float distance_to_center = length(earth_center - position);
 		
