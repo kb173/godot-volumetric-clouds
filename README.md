@@ -29,7 +29,7 @@ The default weather texture (which is rather monotone) can be replaced. It is st
 | G | Raininess (darkness) |
 | B | Type (scale) |
 
-# References 
+## References 
 - [The Real-Time Volumetric Cloudscapes of Horizon Zero Dawn](https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn)
 - [Convincing Cloud Rendering: An Implementation of Real-Time Dynamic Volumetric Clouds in Frostbite](http://publications.lib.chalmers.se/records/fulltext/241770/241770.pdf)
 - [Optimisations for Real-Time Volumetric Cloudscapes](https://arxiv.org/abs/1609.05344)
