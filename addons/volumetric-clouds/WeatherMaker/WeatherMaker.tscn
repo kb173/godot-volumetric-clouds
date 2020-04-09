@@ -1,0 +1,65 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://addons/volumetric-clouds/WeatherMaker/BlendBuffer.shader" type="Shader" id=1]
+[ext_resource path="res://addons/volumetric-clouds/WeatherMaker/CopyBuffer.shader" type="Shader" id=2]
+[ext_resource path="res://addons/volumetric-clouds/WeatherMaker/WeatherMaker.gd" type="Script" id=3]
+[ext_resource path="res://addons/volumetric-clouds/WeatherMaker/Weather.shader" type="Shader" id=4]
+
+[sub_resource type="ViewportTexture" id=3]
+viewport_path = NodePath("Weather")
+
+[sub_resource type="ShaderMaterial" id=4]
+resource_local_to_scene = true
+shader = ExtResource( 2 )
+shader_param/Tex = SubResource( 3 )
+
+[sub_resource type="ShaderMaterial" id=5]
+shader = ExtResource( 4 )
+shader_param/Randomness = Vector3( -911.369, 582.92, 0.732055 )
+
+[sub_resource type="ViewportTexture" id=6]
+viewport_path = NodePath("Copy")
+
+[sub_resource type="ShaderMaterial" id=7]
+resource_local_to_scene = true
+shader = ExtResource( 1 )
+shader_param/Blend = 0.00976236
+shader_param/Tex1 = SubResource( 6 )
+shader_param/Tex2 = SubResource( 3 )
+
+[node name="WeatherMaker" type="Node"]
+script = ExtResource( 3 )
+blend_time = 2.0
+
+[node name="Copy" type="Viewport" parent="."]
+size = Vector2( 512, 512 )
+own_world = true
+usage = 0
+render_target_update_mode = 0
+
+[node name="ColorRect" type="ColorRect" parent="Copy"]
+material = SubResource( 4 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Weather" type="Viewport" parent="."]
+size = Vector2( 512, 512 )
+own_world = true
+usage = 0
+render_target_update_mode = 0
+
+[node name="ColorRect" type="ColorRect" parent="Weather"]
+material = SubResource( 5 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Blend" type="Viewport" parent="."]
+size = Vector2( 512, 512 )
+own_world = true
+usage = 0
+render_target_update_mode = 3
+
+[node name="ColorRect" type="ColorRect" parent="Blend"]
+material = SubResource( 7 )
+anchor_right = 1.0
+anchor_bottom = 1.0
