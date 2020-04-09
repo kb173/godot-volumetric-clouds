@@ -133,6 +133,11 @@ float henyey_greenstein(float cos_light_view_angle) {
 	return ( ( 1.0 - eccentricity * eccentricity ) / pow ( ( 1.0 + eccentricity * eccentricity - 2.0 * eccentricity * cos_light_view_angle ), 3.0 / 2.0) ) / 4.0 * 3.1415;
 }
 
+vec2 mirrored(vec2 v) {
+	vec2 m = mod(v, 2.0);
+	return mix(m, 2.0 - m, step(1.0, m));
+}
+
 void vertex() {
 	// Cover the viewport with the mesh
 	POSITION = vec4(VERTEX, 1.0);
@@ -199,7 +204,7 @@ void fragment() {
 	
 	// If the clouds begin further away than the closest other object, we can stop
 	if (linear_depth < max_depth && march_start.w >= linear_depth) {
-		return;
+		discard;
 	}
 	
 	// Something like this for temporal AA:
@@ -228,8 +233,10 @@ void fragment() {
 		// Calculate the position of the current sample point
 		vec3 position = march_start.xyz + distance_to_camera * direction;
 		
+		vec2 var = vec2(1.0);
+		
 		// Get the weather map value at this position
-		vec3 weather = texture(weather_map, position.xz * 0.00001).xyz;
+		vec3 weather = texture(weather_map, mirrored(position.xz * 0.00001 + 0.5)).xyz;
 		
 		float density_cutoff = mix(min_density, max_density, 1.0 - weather.x);
 		float rain_absorption = mix(min_rain_absorption, max_rain_absorption, weather.y);
