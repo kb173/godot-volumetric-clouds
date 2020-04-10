@@ -30,6 +30,10 @@ uniform float sun_march_distance = 2000.0;
 // Increasing causes clouds to have much clearer edges; decreasing causes them to be more transparent.
 uniform float cloud_definition_factor = 0.0006;
 
+// Increasing causes features in the weather map (such as a thunderstorm) to be
+// larger in scale and less repeating.
+uniform float weather_map_scale = 0.000003;
+
 // Rain absorption range which the G weather texture channel is mapped to
 uniform float min_rain_absorption = 0.5;
 uniform float max_rain_absorption = 4.3;
@@ -236,7 +240,7 @@ void fragment() {
 		vec2 var = vec2(1.0);
 		
 		// Get the weather map value at this position
-		vec3 weather = texture(weather_map, mirrored(position.xz * 0.00001 + 0.5)).xyz;
+		vec3 weather = texture(weather_map, mirrored(position.xz * weather_map_scale + 0.5)).xyz;
 		
 		float density_cutoff = mix(min_density, max_density, 1.0 - weather.x);
 		float rain_absorption = mix(min_rain_absorption, max_rain_absorption, weather.y);
