@@ -3,7 +3,6 @@
 [ext_resource path="res://addons/volumetric-clouds/CloudRenderer.tscn" type="PackedScene" id=1]
 [ext_resource path="res://MouseLookCamera.gd" type="Script" id=2]
 [ext_resource path="res://addons/volumetric-clouds/RaymarchingClouds.shader" type="Shader" id=3]
-[ext_resource path="res://addons/volumetric-clouds/default_weather_map.png" type="Texture" id=5]
 
 [sub_resource type="ProceduralSky" id=1]
 
@@ -12,9 +11,12 @@ background_mode = 2
 background_sky = SubResource( 1 )
 
 [sub_resource type="ViewportTexture" id=3]
+flags = 7
+
+[sub_resource type="ViewportTexture" id=4]
 viewport_path = NodePath("CameraControl/Head/Camera/CloudRenderer/Worley")
 
-[sub_resource type="ShaderMaterial" id=4]
+[sub_resource type="ShaderMaterial" id=5]
 resource_local_to_scene = true
 shader = ExtResource( 3 )
 shader_param/depth = 128.0
@@ -36,8 +38,8 @@ shader_param/earth_radius = 6.37e+06
 shader_param/lowest_march_limit = -5000.0
 shader_param/sun_energy = 1.0
 shader_param/sun_direction = Vector3( 0, -0.7, 0.7 )
-shader_param/worley = SubResource( 3 )
-shader_param/weather_map = ExtResource( 5 )
+shader_param/worley = SubResource( 4 )
+shader_param/weather_map = SubResource( 3 )
 
 [node name="World" type="Spatial"]
 
@@ -55,6 +57,6 @@ current = true
 far = 5000.0
 
 [node name="CloudRenderer" parent="CameraControl/Head/Camera" instance=ExtResource( 1 )]
-material/0 = SubResource( 4 )
+material/0 = SubResource( 5 )
 
 [editable path="CameraControl/Head/Camera/CloudRenderer"]
