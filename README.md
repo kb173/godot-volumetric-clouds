@@ -13,6 +13,7 @@ __Not ready for production.__ Needs quite some optimization and bugfixing.
 - Clouds are within a curved atmosphere appropriate for the earth's curvature
   - This atmosphere can be moved to create other effects such as fog
 - Weather texture which can modify density, size and raininess of clouds
+  - Hand-drawn or procedurally generated
 - Visible within the editor when the CloudRenderer is instanced in the current scene
 
 ## Usage
